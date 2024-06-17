@@ -1,0 +1,27 @@
+md5 hash pseudocode:
+
+get input
+input is broken up to chunks of 512 bit blocks (16, 32 bit words)
+if not divisible pad:
+    append single bit 1 at end
+    append 0 bits until message length is congruent to 448 mod 512 or 64 bits away from being divisible by 512
+
+append 64 bit little endian integer which is the length of the original message
+
+Process the message in 512 bit chunks - split them into 512 bit blocks
+
+Main algo operates on 128 bits (4 128 bits is 512 bits)
+Initialize a 128-bit buffer. Divided into four 32 bit words, denoted A, B, C, D.
+These A, B, C, D are initialized to fix constants
+
+The main algorithm then uses each 512-bit message block in turn to modify the state.
+
+divide each 512 bits to 16 32 bit sub block
+
+Four rounds:
+16 sub blocks and constant k
+
+Resources: 
+
+https://www.ietf.org/rfc/rfc1321.txt
+https://www.comparitech.com/blog/information-security/md5-algorithm-with-examples/
