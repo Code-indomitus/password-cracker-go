@@ -2,8 +2,10 @@ package main
 
 import (
 	// "crypto/md5"
+
 	"encoding/binary"
 	"fmt"
+	"math"
 	// "unicode/utf8"
 )
 
@@ -74,8 +76,13 @@ func md5(plainText string) string {
 	// Initialize table of round constants K
 
 	// Initialize shift constants for each operations in each round
-	s := make([]int, 64)
-	rotatePatterns := [][]int{
+	var A uint32 = 0x01234567
+	var C uint32 = 0x89abcdef
+	var B uint32 = 0xfedcba98
+	var D uint32 = 0x76543210
+
+	s := make([]uint32, 64)
+	rotatePatterns := [][]uint32{
 		{7, 12, 17, 22},
 		{5, 9, 14, 20},
 		{4, 11, 16, 23},
@@ -88,12 +95,12 @@ func md5(plainText string) string {
 		}
 	}
 
-	fmt.Println(s)
+	T := make([]uint32, 64)
+	for i := 0; i < 64; i++ {
+		T[i] = uint32(math.Pow(2, 32) * math.Sin(float64(i+1)))
+	}
 
-	// var A int = 0x67452301
-	// var B int = 0xefcdab89
-	// var C int = 0x98badcfe
-	// var D int = 0x10325476
+	fmt.Println(s)
 
 	// Step 4 Process Message in 16-Word Blocks
 	// for each 512-bit block of message
@@ -109,61 +116,106 @@ func md5(plainText string) string {
 		// initialize 4 working variables, A, B, C, D
 		// main loop
 
-		// Initialize hash values for this chunk
-		A := 0x67452301
-		B := 0xefcdab89
-		C := 0x98badcfe
-		D := 0x10325476
-
-		// Initialize working variables
-		var F int
-		var g int
-
 		// Initialize M
-		M := make([]int, 16)
+		X := make([]uint32, 16)
 
 		for j := 0; j < 16; j++ {
-			M[j] = int(paddedPlainTextBytes[i+j])
+			start := i + (j * 4)
+			X[j] = uint32(bytesToInt(paddedPlainTextBytes[start : start+4]))
 		}
 
+		var AA uint32 = A
+		var BB uint32 = B
+		var CC uint32 = C
+		var DD uint32 = D
+
+		var k uint32
+		var f auxFunc
+
 		// Main loop
-		for j := 0; j < 64; j++ {
+		for j := uint32(0); j < 64; j++ {
+
 			if j < 16 {
-				F = (B & C) | ((^B) & D)
-				g = j
+				k = j
+				f = F
 			} else if j < 32 {
-				F = (D & B) | ((^D) & C)
-				g = (5*j + 1) % 16
+				k = (5*j + 1) % 16
+				f = G
 			} else if j < 48 {
-				F = B ^ C ^ D
-				g = (3*j + 5) % 16
+				k = (3*j + 5) % 16
+				f = H
 			} else {
-				F = C ^ (B | (^D))
-				g = (7 * j) % 16
+				k = (7 * j) % 16
+				f = I
 			}
 
-			dTemp := D
-			D = C
-			C = B
-			B = B + (A + F + M[g] + 0x5a827999)
-			B = (B << s[j]) | (B >> (32 - s[j]))
-			B = B + dTemp
-			A = D
+			if j%4 == 0 {
+				roundOperation(&A, &B, &C, &D, f, X[k], T[j], s[j])
+			} else if j%4 == 1 {
+				roundOperation(&D, &A, &B, &C, f, X[k], T[j], s[j])
+			} else if j%4 == 2 {
+				roundOperation(&C, &D, &A, &B, f, X[k], T[j], s[j])
+			} else if j%4 == 3 {
+				roundOperation(&B, &C, &D, &A, f, X[k], T[j], s[j])
+			}
 		}
 
 		// Step 4 Output
 		// add this chunk's hash to result so far
 		// result = result + hash of this chunk
 
-		// Step 5 Output
-		// return result
+		A = A + AA
+		B = B + BB
+		C = C + CC
+		D = D + DD
 
-		fmt.Println(A, B, C, D)
 	}
 
 	// Step 5 Output
+	// return result
+	fmt.Printf("%s %s %s %s", fmt.Sprintf("%x", A), fmt.Sprintf("%x", B), fmt.Sprintf("%x", C), fmt.Sprintf("%x", D))
 
 	return plainText
+}
+
+/* Let [abcd k s i] denote the operation
+   a = b + ((a + F(b,c,d) + X[k] + T[i]) <<< s). */
+/* Do the following 16 operations for each round. */
+func roundOperation(a, b, c, d *uint32, f auxFunc, k, i, s uint32) {
+	*a = *b + rotateLeft((*a+f(*b, *c, *d)+k+i), s)
+}
+
+/*
+ Auxiliar functions
+*/
+
+type auxFunc func(uint32, uint32, uint32) uint32
+
+func F(x, y, z uint32) uint32 {
+	return (x & y) | ((^x) & z)
+}
+
+func G(x, y, z uint32) uint32 {
+	return (x & z) | (y & (^z))
+}
+
+func H(x, y, z uint32) uint32 {
+	return x ^ y ^ z
+}
+
+func I(x, y, z uint32) uint32 {
+	return y ^ (x | (^z))
+}
+
+/*
+Helper functions
+*/
+func rotateLeft(x uint32, n uint32) uint32 {
+	return ((x) << (n)) | ((x) >> (32 - (n)))
+}
+
+func bytesToInt(binary []byte) uint32 {
+	return uint32(binary[0])<<24 | uint32(binary[1])<<16 | uint32(binary[2])<<8 | uint32(binary[3])
 }
 
 func main() {
