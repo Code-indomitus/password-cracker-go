@@ -8,6 +8,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"math"
+	"math/bits"
 	// "unicode/utf8"
 )
 
@@ -129,9 +130,12 @@ func md6(plainText string) string {
 	// initialize hash value for this chunk, in map M
 	// initialize 4 working variables, A, B, C, D
 	// main loop
+	count := 0
 
 	// Iterate over each 512 bit block
 	for i := 0; i <= len(paddedPlainTextBytes)-64; i += 64 {
+		count += 1
+		fmt.Println("Count: ", count)
 		// break the block into sixteen 32-bit words
 		// initialize hash value for this chunk, in map M
 		// initialize 4 working variables, A, B, C, D
@@ -154,55 +158,77 @@ func md6(plainText string) string {
 		var CC uint32 = C
 		var DD uint32 = D
 
-		var k uint32
-		var f auxFunc
+		// Round 1
+		A = B + bits.RotateLeft32(F(B, C, D)+A+X[0]+T[0], 7)
+		D = A + bits.RotateLeft32(F(A, B, C)+D+X[1]+T[1], 12)
+		C = D + bits.RotateLeft32(F(D, A, B)+C+X[2]+T[2], 17)
+		B = C + bits.RotateLeft32(F(C, D, A)+B+X[3]+T[3], 22)
+		A = B + bits.RotateLeft32(F(B, C, D)+A+X[4]+T[4], 7)
+		D = A + bits.RotateLeft32(F(A, B, C)+D+X[5]+T[5], 12)
+		C = D + bits.RotateLeft32(F(D, A, B)+C+X[6]+T[6], 17)
+		B = C + bits.RotateLeft32(F(C, D, A)+B+X[7]+T[7], 22)
+		A = B + bits.RotateLeft32(F(B, C, D)+A+X[8]+T[8], 7)
+		D = A + bits.RotateLeft32(F(A, B, C)+D+X[9]+T[9], 12)
+		C = D + bits.RotateLeft32(F(D, A, B)+C+X[10]+T[10], 17)
+		B = C + bits.RotateLeft32(F(C, D, A)+B+X[11]+T[11], 22)
+		A = B + bits.RotateLeft32(F(B, C, D)+A+X[12]+T[12], 7)
+		D = A + bits.RotateLeft32(F(A, B, C)+D+X[13]+T[13], 12)
+		C = D + bits.RotateLeft32(F(D, A, B)+C+X[14]+T[14], 17)
+		B = C + bits.RotateLeft32(F(C, D, A)+B+X[15]+T[15], 22)
 
-		// Main loop
-		for j := uint32(0); j < 64; j++ {
-			fmt.Println("Value for j: ", j)
+		// Round 2
+		A = B + bits.RotateLeft32(G(B, C, D)+A+X[1]+T[16], 5)
+		D = A + bits.RotateLeft32(G(A, B, C)+D+X[6]+T[17], 9)
+		C = D + bits.RotateLeft32(G(D, A, B)+C+X[11]+T[18], 14)
+		B = C + bits.RotateLeft32(G(C, D, A)+B+X[0]+T[19], 20)
+		A = B + bits.RotateLeft32(G(B, C, D)+A+X[5]+T[20], 5)
+		D = A + bits.RotateLeft32(G(A, B, C)+D+X[10]+T[21], 9)
+		C = D + bits.RotateLeft32(G(D, A, B)+C+X[15]+T[22], 14)
+		B = C + bits.RotateLeft32(G(C, D, A)+B+X[4]+T[23], 20)
+		A = B + bits.RotateLeft32(G(B, C, D)+A+X[9]+T[24], 5)
+		D = A + bits.RotateLeft32(G(A, B, C)+D+X[14]+T[25], 9)
+		C = D + bits.RotateLeft32(G(D, A, B)+C+X[3]+T[26], 14)
+		B = C + bits.RotateLeft32(G(C, D, A)+B+X[8]+T[27], 20)
+		A = B + bits.RotateLeft32(G(B, C, D)+A+X[13]+T[28], 5)
+		D = A + bits.RotateLeft32(G(A, B, C)+D+X[2]+T[29], 9)
+		C = D + bits.RotateLeft32(G(D, A, B)+C+X[7]+T[30], 14)
+		B = C + bits.RotateLeft32(G(C, D, A)+B+X[12]+T[31], 20)
 
-			if j < 16 {
-				k = j
-				f = F
-			} else if j < 32 {
-				k = (5*j + 1) % 16
-				f = G
-			} else if j < 48 {
-				k = (3*j + 5) % 16
-				f = H
-			} else {
-				k = (7 * j) % 16
-				f = I
-			}
+		// Round 3
+		A = B + bits.RotateLeft32(H(B, C, D)+A+X[5]+T[32], 4)
+		D = A + bits.RotateLeft32(H(A, B, C)+D+X[8]+T[33], 11)
+		C = D + bits.RotateLeft32(H(D, A, B)+C+X[11]+T[34], 16)
+		B = C + bits.RotateLeft32(H(C, D, A)+B+X[14]+T[35], 23)
+		A = B + bits.RotateLeft32(H(B, C, D)+A+X[1]+T[36], 4)
+		D = A + bits.RotateLeft32(H(A, B, C)+D+X[4]+T[37], 11)
+		C = D + bits.RotateLeft32(H(D, A, B)+C+X[7]+T[38], 16)
+		B = C + bits.RotateLeft32(H(C, D, A)+B+X[10]+T[39], 23)
+		A = B + bits.RotateLeft32(H(B, C, D)+A+X[13]+T[40], 4)
+		D = A + bits.RotateLeft32(H(A, B, C)+D+X[0]+T[41], 11)
+		C = D + bits.RotateLeft32(H(D, A, B)+C+X[3]+T[42], 16)
+		B = C + bits.RotateLeft32(H(C, D, A)+B+X[6]+T[43], 23)
+		A = B + bits.RotateLeft32(H(B, C, D)+A+X[9]+T[44], 4)
+		D = A + bits.RotateLeft32(H(A, B, C)+D+X[12]+T[45], 11)
+		C = D + bits.RotateLeft32(H(D, A, B)+C+X[15]+T[46], 16)
+		B = C + bits.RotateLeft32(H(C, D, A)+B+X[2]+T[47], 23)
 
-			fmt.Println("k value: ", k)
-
-			fmt.Println("Aux function: ", f)
-
-			dTemp := D
-			D = C
-			C = B
-
-			if j%4 == 0 {
-				fmt.Println("Before update: ", A)
-				B += roundOperation(&A, &B, &C, &D, f, X[k], T[j], s[j])
-				fmt.Println("After update: ", A)
-			} else if j%4 == 1 {
-				fmt.Println("Before update B: ", D)
-
-				B += roundOperation(&A, &B, &C, &D, f, X[k], T[j], s[j])
-				fmt.Println("After update B: ", D)
-
-			} else if j%4 == 2 {
-				B += roundOperation(&A, &B, &C, &D, f, X[k], T[j], s[j])
-			} else if j%4 == 3 {
-				B += roundOperation(&A, &B, &C, &D, f, X[k], T[j], s[j])
-			}
-			fmt.Println("Result here: ")
-			fmt.Printf("%s %s %s %s", fmt.Sprintf("%x", A), fmt.Sprintf("%x", B), fmt.Sprintf("%x", C), fmt.Sprintf("%x", D))
-
-			A = dTemp
-		}
+		// Round 4
+		A = B + bits.RotateLeft32(H(B, C, D)+A+X[0]+T[48], 6)
+		D = A + bits.RotateLeft32(H(A, B, C)+D+X[7]+T[49], 10)
+		C = D + bits.RotateLeft32(H(D, A, B)+C+X[14]+T[50], 15)
+		B = C + bits.RotateLeft32(H(C, D, A)+B+X[5]+T[51], 21)
+		A = B + bits.RotateLeft32(H(B, C, D)+A+X[12]+T[52], 6)
+		D = A + bits.RotateLeft32(H(A, B, C)+D+X[3]+T[53], 10)
+		C = D + bits.RotateLeft32(H(D, A, B)+C+X[10]+T[54], 15)
+		B = C + bits.RotateLeft32(H(C, D, A)+B+X[1]+T[55], 21)
+		A = B + bits.RotateLeft32(H(B, C, D)+A+X[8]+T[56], 6)
+		D = A + bits.RotateLeft32(H(A, B, C)+D+X[15]+T[57], 10)
+		C = D + bits.RotateLeft32(H(D, A, B)+C+X[6]+T[58], 15)
+		B = C + bits.RotateLeft32(H(C, D, A)+B+X[13]+T[59], 21)
+		A = B + bits.RotateLeft32(H(B, C, D)+A+X[4]+T[60], 6)
+		D = A + bits.RotateLeft32(H(A, B, C)+D+X[11]+T[61], 10)
+		C = D + bits.RotateLeft32(H(D, A, B)+C+X[2]+T[62], 15)
+		B = C + bits.RotateLeft32(H(C, D, A)+B+X[9]+T[63], 21)
 
 		A = A + AA
 		B = B + BB
@@ -216,6 +242,12 @@ func md6(plainText string) string {
 		// result = result + hash of this chunk
 		fmt.Println("Hare Krishna")
 	}
+
+	fmt.Println("Bits:")
+	printIntAsBits(A)
+	printIntAsBits(B)
+	printIntAsBits(C)
+	printIntAsBits(D)
 
 	// Step 5 Output
 	// return result
@@ -305,7 +337,7 @@ func outputMd5(text string) {
 }
 
 func main() {
-	// outputMd5("They are deterministic")
+	// outputMd5("a")
 	// fmt.Println()
 	fmt.Println(md6("They are deterministic"))
 	// fmt.Println(rotateLeft(1, 31))
