@@ -3,13 +3,15 @@ package main
 import (
 	// "crypto/md5"
 
+	"crypto/md5"
 	"encoding/binary"
+	"encoding/hex"
 	"fmt"
 	"math"
 	// "unicode/utf8"
 )
 
-func md5(plainText string) string {
+func md6(plainText string) string {
 
 	// Step 1 Append padding bits
 	// get length of string in
@@ -64,6 +66,10 @@ func md5(plainText string) string {
 
 	paddedPlainTextBytes := append(plainTextBytes, lengthBytes...)
 	fmt.Println("Padded plain text bytes: ", paddedPlainTextBytes)
+
+	for i := range paddedPlainTextBytes {
+		printByteAsBits(paddedPlainTextBytes[i])
+	}
 	fmt.Println("Number of bytes in padded text: ", len(paddedPlainTextBytes))
 
 	// Step 3 Initialize MD Buffer
@@ -76,10 +82,17 @@ func md5(plainText string) string {
 	// Initialize table of round constants K
 
 	// Initialize shift constants for each operations in each round
-	var A uint32 = 0x01234567
-	var C uint32 = 0x89abcdef
-	var B uint32 = 0xfedcba98
-	var D uint32 = 0x76543210
+	// var A uint32 = 0x01234567
+	// var C uint32 = 0x89abcdef
+	// var B uint32 = 0xfedcba98
+	// var D uint32 = 0x76543210
+	var A uint32 = 0x67452301
+	var C uint32 = 0xEFCDAB89
+	var B uint32 = 0x98BADCFE
+	var D uint32 = 0x10325476
+
+	fmt.Println("First here let us go yay: ")
+	fmt.Printf("%s %s %s %s", fmt.Sprintf("%x", A), fmt.Sprintf("%x", B), fmt.Sprintf("%x", C), fmt.Sprintf("%x", D))
 
 	s := make([]uint32, 64)
 	rotatePatterns := [][]uint32{
@@ -95,10 +108,18 @@ func md5(plainText string) string {
 		}
 	}
 
+	fmt.Println("Rotations: ", s)
+
 	T := make([]uint32, 64)
+	Z := make([]int, 64)
 	for i := 0; i < 64; i++ {
-		T[i] = uint32(math.Pow(2, 32) * math.Sin(float64(i+1)))
+		T[i] = uint32(math.Pow(2, 32) * math.Abs(math.Sin(float64(i+1))))
+		Z[i] = int(math.Pow(2, 32) * math.Abs(math.Sin(float64(i+1))))
 	}
+
+	fmt.Printf(fmt.Sprintf("T[0] hello: %x\n", T[uint32(63)]))
+	fmt.Println("T here hello: ", T[uint32(63)])
+	fmt.Println(Z[0])
 
 	fmt.Println(s)
 
@@ -110,7 +131,7 @@ func md5(plainText string) string {
 	// main loop
 
 	// Iterate over each 512 bit block
-	for i := 0; i < len(paddedPlainTextBytes); i += 64 {
+	for i := 0; i <= len(paddedPlainTextBytes)-64; i += 64 {
 		// break the block into sixteen 32-bit words
 		// initialize hash value for this chunk, in map M
 		// initialize 4 working variables, A, B, C, D
@@ -118,11 +139,15 @@ func md5(plainText string) string {
 
 		// Initialize M
 		X := make([]uint32, 16)
-
+		fmt.Println("Start")
 		for j := 0; j < 16; j++ {
 			start := i + (j * 4)
-			X[j] = uint32(bytesToInt(paddedPlainTextBytes[start : start+4]))
+			X[j] = binary.LittleEndian.Uint32(paddedPlainTextBytes[start : start+4])
+			// bytesToInt(paddedPlainTextBytes[start : start+4])
+			fmt.Println("Values:", j)
+			printIntAsBits(X[j])
 		}
+		fmt.Println("End")
 
 		var AA uint32 = A
 		var BB uint32 = B
@@ -134,6 +159,7 @@ func md5(plainText string) string {
 
 		// Main loop
 		for j := uint32(0); j < 64; j++ {
+			fmt.Println("Value for j: ", j)
 
 			if j < 16 {
 				k = j
@@ -149,26 +175,46 @@ func md5(plainText string) string {
 				f = I
 			}
 
-			if j%4 == 0 {
-				roundOperation(&A, &B, &C, &D, f, X[k], T[j], s[j])
-			} else if j%4 == 1 {
-				roundOperation(&D, &A, &B, &C, f, X[k], T[j], s[j])
-			} else if j%4 == 2 {
-				roundOperation(&C, &D, &A, &B, f, X[k], T[j], s[j])
-			} else if j%4 == 3 {
-				roundOperation(&B, &C, &D, &A, f, X[k], T[j], s[j])
-			}
-		}
+			fmt.Println("k value: ", k)
 
-		// Step 4 Output
-		// add this chunk's hash to result so far
-		// result = result + hash of this chunk
+			fmt.Println("Aux function: ", f)
+
+			dTemp := D
+			D = C
+			C = B
+
+			if j%4 == 0 {
+				fmt.Println("Before update: ", A)
+				B += roundOperation(&A, &B, &C, &D, f, X[k], T[j], s[j])
+				fmt.Println("After update: ", A)
+			} else if j%4 == 1 {
+				fmt.Println("Before update B: ", D)
+
+				B += roundOperation(&A, &B, &C, &D, f, X[k], T[j], s[j])
+				fmt.Println("After update B: ", D)
+
+			} else if j%4 == 2 {
+				B += roundOperation(&A, &B, &C, &D, f, X[k], T[j], s[j])
+			} else if j%4 == 3 {
+				B += roundOperation(&A, &B, &C, &D, f, X[k], T[j], s[j])
+			}
+			fmt.Println("Result here: ")
+			fmt.Printf("%s %s %s %s", fmt.Sprintf("%x", A), fmt.Sprintf("%x", B), fmt.Sprintf("%x", C), fmt.Sprintf("%x", D))
+
+			A = dTemp
+		}
 
 		A = A + AA
 		B = B + BB
 		C = C + CC
 		D = D + DD
 
+		// fmt.Printf("%s %s %s %s", fmt.Sprintf("%x", A), fmt.Sprintf("%x", B), fmt.Sprintf("%x", C), fmt.Sprintf("%x", D))
+
+		// Step 4 Output
+		// add this chunk's hash to result so far
+		// result = result + hash of this chunk
+		fmt.Println("Hare Krishna")
 	}
 
 	// Step 5 Output
@@ -181,8 +227,8 @@ func md5(plainText string) string {
 /* Let [abcd k s i] denote the operation
    a = b + ((a + F(b,c,d) + X[k] + T[i]) <<< s). */
 /* Do the following 16 operations for each round. */
-func roundOperation(a, b, c, d *uint32, f auxFunc, k, i, s uint32) {
-	*a = *b + rotateLeft((*a+f(*b, *c, *d)+k+i), s)
+func roundOperation(a, b, c, d *uint32, f auxFunc, k, i, s uint32) uint32 {
+	return rotateLeft((*a + f(*b, *c, *d) + k + i), s)
 }
 
 /*
@@ -218,8 +264,72 @@ func bytesToInt(binary []byte) uint32 {
 	return uint32(binary[0])<<24 | uint32(binary[1])<<16 | uint32(binary[2])<<8 | uint32(binary[3])
 }
 
+func printByteAsBits(b byte) {
+	for i := 7; i >= 0; i-- {
+		if b&(1<<i) != 0 {
+			fmt.Print("1")
+		} else {
+			fmt.Print("0")
+		}
+	}
+	fmt.Println()
+}
+
+func printIntAsBits(num uint32) {
+	for i := 31; i >= 0; i-- {
+		bit := (num >> i) & 1
+		fmt.Print(bit)
+		if i%8 == 0 {
+			fmt.Print(" ") // Insert space for better readability every 8 bits
+		}
+	}
+	fmt.Println()
+}
+
+func outputMd5(text string) {
+	// Create a new MD5 hash object
+	hash := md5.New()
+
+	// Write the data to the hash object
+	hash.Write([]byte(text))
+
+	// Compute the MD5 checksum
+	hashInBytes := hash.Sum(nil)
+
+	// Convert the bytes to a hexadecimal string
+	hashInHex := hex.EncodeToString(hashInBytes)
+
+	// Print the result
+	fmt.Println("MD5 hash:", hashInHex)
+	fmt.Println()
+}
+
 func main() {
-	fmt.Println(md5("They are deterministic"))
+	// outputMd5("They are deterministic")
+	// fmt.Println()
+	fmt.Println(md6("They are deterministic"))
+	// fmt.Println(rotateLeft(1, 31))
+	// var a uint32 = 1
+	// var b uint32 = a
+
+	// fmt.Println(a, b)
+	// a = 2
+	// fmt.Println(a, b)
+
+	// var b uint32 = 0x89abcdef
+	// var c uint32 = 0xfedcba98
+	// var d uint32 = 0x76543210
+	// fmt.Printf(fmt.Sprintf("%x\n", F(b, c, d)))
+
+	// var one uint32 = 1
+	// var zero uint32 = 1
+
+	// // fmt.Println(^one)
+	// printIntAsBits(zero ^ one)
+
+	// var e uint32 = 0x2bd309f0
+	// fmt.Printf(fmt.Sprintf("%x\n", rotateLeft(e, 7)))
+
 	// fmt.Println(len("abcde"))
 	// data := []byte("hello")
 	// fmt.Printf("%x", md5.Sum(data))
