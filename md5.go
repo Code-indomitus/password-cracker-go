@@ -92,37 +92,44 @@ func md6(plainText string) string {
 	var B uint32 = 0x98BADCFE
 	var D uint32 = 0x10325476
 
+	fmt.Println("A: ", A)
+
 	fmt.Println("First here let us go yay: ")
 	fmt.Printf("%s %s %s %s", fmt.Sprintf("%x", A), fmt.Sprintf("%x", B), fmt.Sprintf("%x", C), fmt.Sprintf("%x", D))
 
-	s := make([]uint32, 64)
-	rotatePatterns := [][]uint32{
-		{7, 12, 17, 22},
-		{5, 9, 14, 20},
-		{4, 11, 16, 23},
-		{6, 10, 15, 21},
-	}
+	// s := make([]uint32, 64)
+	// rotatePatterns := [][]uint32{
+	// 	{7, 12, 17, 22},
+	// 	{5, 9, 14, 20},
+	// 	{4, 11, 16, 23},
+	// 	{6, 10, 15, 21},
+	// }
 
-	for i, pattern := range rotatePatterns {
-		for j := 0; j < 4; j++ {
-			copy(s[i*16+j*4:i*16+(j+1)*4], pattern)
-		}
-	}
+	// for i, pattern := range rotatePatterns {
+	// 	for j := 0; j < 4; j++ {
+	// 		copy(s[i*16+j*4:i*16+(j+1)*4], pattern)
+	// 	}
+	// }
 
-	fmt.Println("Rotations: ", s)
+	// fmt.Println("Rotations: ", s)
 
 	T := make([]uint32, 64)
-	Z := make([]int, 64)
+	// Z := make([]int, 64)
+
 	for i := 0; i < 64; i++ {
 		T[i] = uint32(math.Pow(2, 32) * math.Abs(math.Sin(float64(i+1))))
-		Z[i] = int(math.Pow(2, 32) * math.Abs(math.Sin(float64(i+1))))
+		// Z[i] = int(math.Pow(2, 32) * math.Abs(math.Sin(float64(i+1))))
+
+		fmt.Println("Table Values: ")
+
+		fmt.Printf(fmt.Sprintf("T[%d] : %x\n", i, T[uint32(i)]))
+
 	}
 
-	fmt.Printf(fmt.Sprintf("T[0] hello: %x\n", T[uint32(63)]))
-	fmt.Println("T here hello: ", T[uint32(63)])
-	fmt.Println(Z[0])
+	// fmt.Println("T here hello: ", T[uint32(13)])
+	// fmt.Println(Z[0])
 
-	fmt.Println(s)
+	// fmt.Println(s)
 
 	// Step 4 Process Message in 16-Word Blocks
 	// for each 512-bit block of message
@@ -146,7 +153,7 @@ func md6(plainText string) string {
 		fmt.Println("Start")
 		for j := 0; j < 16; j++ {
 			start := i + (j * 4)
-			X[j] = binary.LittleEndian.Uint32(paddedPlainTextBytes[start : start+4])
+			X[j] = binary.BigEndian.Uint32(paddedPlainTextBytes[start : start+4])
 			// bytesToInt(paddedPlainTextBytes[start : start+4])
 			fmt.Println("Values:", j)
 			printIntAsBits(X[j])
@@ -159,7 +166,12 @@ func md6(plainText string) string {
 		var DD uint32 = D
 
 		// Round 1
-		A = B + bits.RotateLeft32(F(B, C, D)+A+X[0]+T[0], 7)
+		A = B + bits.RotateLeft32(F(B, C, D)+A+X[0]+T[0], 7) // [ABCD  0  7  1]
+
+		// After first round:
+		fmt.Println("After first round:")
+		fmt.Printf("%s %s %s %s", fmt.Sprintf("%x", A), fmt.Sprintf("%x", B), fmt.Sprintf("%x", C), fmt.Sprintf("%x", D))
+
 		D = A + bits.RotateLeft32(F(A, B, C)+D+X[1]+T[1], 12)
 		C = D + bits.RotateLeft32(F(D, A, B)+C+X[2]+T[2], 17)
 		B = C + bits.RotateLeft32(F(C, D, A)+B+X[3]+T[3], 22)
@@ -213,22 +225,22 @@ func md6(plainText string) string {
 		B = C + bits.RotateLeft32(H(C, D, A)+B+X[2]+T[47], 23)
 
 		// Round 4
-		A = B + bits.RotateLeft32(H(B, C, D)+A+X[0]+T[48], 6)
-		D = A + bits.RotateLeft32(H(A, B, C)+D+X[7]+T[49], 10)
-		C = D + bits.RotateLeft32(H(D, A, B)+C+X[14]+T[50], 15)
-		B = C + bits.RotateLeft32(H(C, D, A)+B+X[5]+T[51], 21)
-		A = B + bits.RotateLeft32(H(B, C, D)+A+X[12]+T[52], 6)
-		D = A + bits.RotateLeft32(H(A, B, C)+D+X[3]+T[53], 10)
-		C = D + bits.RotateLeft32(H(D, A, B)+C+X[10]+T[54], 15)
-		B = C + bits.RotateLeft32(H(C, D, A)+B+X[1]+T[55], 21)
-		A = B + bits.RotateLeft32(H(B, C, D)+A+X[8]+T[56], 6)
-		D = A + bits.RotateLeft32(H(A, B, C)+D+X[15]+T[57], 10)
-		C = D + bits.RotateLeft32(H(D, A, B)+C+X[6]+T[58], 15)
-		B = C + bits.RotateLeft32(H(C, D, A)+B+X[13]+T[59], 21)
-		A = B + bits.RotateLeft32(H(B, C, D)+A+X[4]+T[60], 6)
-		D = A + bits.RotateLeft32(H(A, B, C)+D+X[11]+T[61], 10)
-		C = D + bits.RotateLeft32(H(D, A, B)+C+X[2]+T[62], 15)
-		B = C + bits.RotateLeft32(H(C, D, A)+B+X[9]+T[63], 21)
+		A = B + bits.RotateLeft32(I(B, C, D)+A+X[0]+T[48], 6)
+		D = A + bits.RotateLeft32(I(A, B, C)+D+X[7]+T[49], 10)
+		C = D + bits.RotateLeft32(I(D, A, B)+C+X[14]+T[50], 15)
+		B = C + bits.RotateLeft32(I(C, D, A)+B+X[5]+T[51], 21)
+		A = B + bits.RotateLeft32(I(B, C, D)+A+X[12]+T[52], 6)
+		D = A + bits.RotateLeft32(I(A, B, C)+D+X[3]+T[53], 10)
+		C = D + bits.RotateLeft32(I(D, A, B)+C+X[10]+T[54], 15)
+		B = C + bits.RotateLeft32(I(C, D, A)+B+X[1]+T[55], 21)
+		A = B + bits.RotateLeft32(I(B, C, D)+A+X[8]+T[56], 6)
+		D = A + bits.RotateLeft32(I(A, B, C)+D+X[15]+T[57], 10)
+		C = D + bits.RotateLeft32(I(D, A, B)+C+X[6]+T[58], 15)
+		B = C + bits.RotateLeft32(I(C, D, A)+B+X[13]+T[59], 21)
+		A = B + bits.RotateLeft32(I(B, C, D)+A+X[4]+T[60], 6)
+		D = A + bits.RotateLeft32(I(A, B, C)+D+X[11]+T[61], 10)
+		C = D + bits.RotateLeft32(I(D, A, B)+C+X[2]+T[62], 15)
+		B = C + bits.RotateLeft32(I(C, D, A)+B+X[9]+T[63], 21)
 
 		A = A + AA
 		B = B + BB
@@ -337,9 +349,9 @@ func outputMd5(text string) {
 }
 
 func main() {
-	// outputMd5("a")
+	outputMd5("ate")
 	// fmt.Println()
-	fmt.Println(md6("They are deterministic"))
+	fmt.Println(md6("ate"))
 	// fmt.Println(rotateLeft(1, 31))
 	// var a uint32 = 1
 	// var b uint32 = a
