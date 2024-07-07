@@ -25,3 +25,10 @@ Resources:
 
 https://www.ietf.org/rfc/rfc1321.txt
 https://www.comparitech.com/blog/information-security/md5-algorithm-with-examples/
+
+Useful debugging sites:
+
+https://twy.name/Tools/Hash/md5.html Web visualization tool
+
+Hard to make build for project running into make errors:
+https://github.com/MrBlackk/md5_sha256-512_debugger

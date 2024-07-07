@@ -59,7 +59,7 @@ func md6(plainText string) string {
 
 	var plainTextBitLength uint64 = uint64(plainTextByteSize) * 8
 	lengthBytes := make([]byte, 8)
-	binary.BigEndian.PutUint64(lengthBytes, plainTextBitLength)
+	binary.LittleEndian.PutUint64(lengthBytes, plainTextBitLength)
 
 	fmt.Println("Final padded: ", plainTextBytes)
 	fmt.Println(len(plainTextBytes))
@@ -88,8 +88,8 @@ func md6(plainText string) string {
 	// var B uint32 = 0xfedcba98
 	// var D uint32 = 0x76543210
 	var A uint32 = 0x67452301
-	var C uint32 = 0xEFCDAB89
-	var B uint32 = 0x98BADCFE
+	var B uint32 = 0xEFCDAB89
+	var C uint32 = 0x98BADCFE
 	var D uint32 = 0x10325476
 
 	fmt.Println("A: ", A)
@@ -153,7 +153,7 @@ func md6(plainText string) string {
 		fmt.Println("Start")
 		for j := 0; j < 16; j++ {
 			start := i + (j * 4)
-			X[j] = binary.BigEndian.Uint32(paddedPlainTextBytes[start : start+4])
+			X[j] = binary.LittleEndian.Uint32(paddedPlainTextBytes[start : start+4])
 			// bytesToInt(paddedPlainTextBytes[start : start+4])
 			fmt.Println("Values:", j)
 			printIntAsBits(X[j])
@@ -165,12 +165,16 @@ func md6(plainText string) string {
 		var CC uint32 = C
 		var DD uint32 = D
 
+		// Before first round:
+		fmt.Println("Before first round:")
+		fmt.Printf("%s %s %s %s\n", fmt.Sprintf("%x", A), fmt.Sprintf("%x", B), fmt.Sprintf("%x", C), fmt.Sprintf("%x", D))
+
 		// Round 1
 		A = B + bits.RotateLeft32(F(B, C, D)+A+X[0]+T[0], 7) // [ABCD  0  7  1]
 
 		// After first round:
 		fmt.Println("After first round:")
-		fmt.Printf("%s %s %s %s", fmt.Sprintf("%x", A), fmt.Sprintf("%x", B), fmt.Sprintf("%x", C), fmt.Sprintf("%x", D))
+		fmt.Printf("%s %s %s %s\n", fmt.Sprintf("%x", A), fmt.Sprintf("%x", B), fmt.Sprintf("%x", C), fmt.Sprintf("%x", D))
 
 		D = A + bits.RotateLeft32(F(A, B, C)+D+X[1]+T[1], 12)
 		C = D + bits.RotateLeft32(F(D, A, B)+C+X[2]+T[2], 17)
@@ -263,7 +267,7 @@ func md6(plainText string) string {
 
 	// Step 5 Output
 	// return result
-	fmt.Printf("%s %s %s %s", fmt.Sprintf("%x", A), fmt.Sprintf("%x", B), fmt.Sprintf("%x", C), fmt.Sprintf("%x", D))
+	fmt.Printf("%s %s %s %s", fmt.Sprintf("%x", D), fmt.Sprintf("%x", B), fmt.Sprintf("%x", C), fmt.Sprintf("%x", D))
 
 	return plainText
 }
@@ -349,9 +353,9 @@ func outputMd5(text string) {
 }
 
 func main() {
-	outputMd5("ate")
+	outputMd5("1")
 	// fmt.Println()
-	fmt.Println(md6("ate"))
+	fmt.Println(md6("1"))
 	// fmt.Println(rotateLeft(1, 31))
 	// var a uint32 = 1
 	// var b uint32 = a
