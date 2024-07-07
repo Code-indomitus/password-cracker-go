@@ -267,9 +267,19 @@ func md6(plainText string) string {
 
 	// Step 5 Output
 	// return result
-	fmt.Printf("%s %s %s %s", fmt.Sprintf("%x", D), fmt.Sprintf("%x", B), fmt.Sprintf("%x", C), fmt.Sprintf("%x", D))
+	fmt.Printf("%s %s %s %s\n", fmt.Sprintf("%x", A), fmt.Sprintf("%x", B), fmt.Sprintf("%x", C), fmt.Sprintf("%x", D))
+	// It looks like the code you provided is a comment in the Go programming language. Comments in Go
+	// start with "//" for single-line comments and "/*" and "*/" for multi-line comments. In this case,
+	// the comment is simply "bs".
 
-	return plainText
+	mdBytes := make([]byte, 16)
+	binary.LittleEndian.PutUint32(mdBytes[0:], A)
+	binary.LittleEndian.PutUint32(mdBytes[4:], B)
+
+	binary.LittleEndian.PutUint32(mdBytes[8:], C)
+	binary.LittleEndian.PutUint32(mdBytes[12:], D)
+
+	return hex.EncodeToString(mdBytes)
 }
 
 /* Let [abcd k s i] denote the operation
@@ -334,7 +344,7 @@ func printIntAsBits(num uint32) {
 	fmt.Println()
 }
 
-func outputMd5(text string) {
+func outputMd5(text string) string {
 	// Create a new MD5 hash object
 	hash := md5.New()
 
@@ -350,12 +360,17 @@ func outputMd5(text string) {
 	// Print the result
 	fmt.Println("MD5 hash:", hashInHex)
 	fmt.Println()
+	return hashInHex
 }
 
 func main() {
 	outputMd5("1")
 	// fmt.Println()
 	fmt.Println(md6("1"))
+
+	// value := "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789"
+
+	// fmt.Println(outputMd5(value) == md6(value))
 	// fmt.Println(rotateLeft(1, 31))
 	// var a uint32 = 1
 	// var b uint32 = a
