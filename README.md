@@ -11,7 +11,7 @@ To use the password cracker, run the program with the following command-line arg
 
 #### Brute force passwords of length four
 ```bash
-go run passcracker.go <hash> [-l <wordlist_path>]
+go run passcracker.go <hash>
 
 # Example: 
 go run .\passcracker.go 2bdb742fc3d075ec6b73ea414f27819a
@@ -19,7 +19,7 @@ go run .\passcracker.go 2bdb742fc3d075ec6b73ea414f27819a
 
 #### Use word list to 
 ```bash
-go run passcracker.go <hash> [-l <wordlist_path>]
+go run passcracker.go -l <hash> <wordlist_path>
 
 # Example:
 go run .\passcracker.go -l 2bdb742fc3d075ec6b73ea414f27819a .\word-lists\realhuman_phill.txt
