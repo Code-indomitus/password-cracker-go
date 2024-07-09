@@ -24,3 +24,5 @@ go.work.sum
 
 # Files for debugging
 md5_sha256-512_debugger/
+
+word-lists/
