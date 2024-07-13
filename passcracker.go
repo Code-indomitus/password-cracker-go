@@ -100,7 +100,7 @@ func Md5WordListCracker(hash string, wordListFilePath string) {
 }
 
 func main() {
-	// Declare the flag options of word count
+	// Declare the flag options of password cracker program
 	var wordListFlag bool
 
 	// Parse command line arguments for flags
