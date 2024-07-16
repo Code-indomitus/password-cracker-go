@@ -17,7 +17,7 @@ go run passcracker.go <hash>
 go run .\passcracker.go 2bdb742fc3d075ec6b73ea414f27819a
 ```
 
-#### Use word list to 
+#### Use word list to crack passwords
 ```bash
 go run passcracker.go -l <hash> <wordlist_path>
 
